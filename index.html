@@ -79,7 +79,9 @@
     --serif:'Cormorant',Georgia,serif; --sans:'DM Sans',system-ui,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  /* NE smooth: Lenis sam animira scroll preko window.scrollTo(); nativni smooth
+     bi svaki taj frame dodatno usporio pa scroll zapinje i ne stigne do cilja. */
+  html{scroll-behavior:auto}
   body{font-family:var(--sans);background:var(--linen);color:var(--ink);font-weight:300;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   h1,h2,h3,.serif{font-family:var(--serif);font-weight:400;line-height:1.08;letter-spacing:.005em}
   img{display:block;max-width:100%}
@@ -581,21 +583,15 @@
     if(window.gsap && window.ScrollTrigger){
       gsap.registerPlugin(ScrollTrigger);
       lenis.on('scroll',ScrollTrigger.update);
-      gsap.ticker.add(t=>lenis.raf(t*1000));
-      gsap.ticker.lagSmoothing(0);
+      /* raf je vec registriran gore — drugi ticker bi zvao lenis.raf 2x po frameu */
     }
   }
 
-  // anchor smooth scroll via lenis
+  // anchor scroll: SAMO zatvaranje mobilnog menija.
+  // Sam skok radi jedinstveni __smoothTo handler nize — dva handlera na istom
+  // linku su se prije pregazila (offset -10 vs 0) i scroll je preskakao.
   document.querySelectorAll('a[href^="#"]').forEach(a=>{
-    a.addEventListener('click',e=>{
-      const id=a.getAttribute('href');
-      if(id.length>1 && document.querySelector(id)){
-        e.preventDefault();
-        if(lenis) lenis.scrollTo(id,{offset:-10}); else window.__smoothTo(document.querySelector(id));
-        document.body.classList.remove('nav-open');
-      }
-    });
+    a.addEventListener('click',()=>{ document.body.classList.remove('nav-open'); });
   });
 
   // Header scrolled state
